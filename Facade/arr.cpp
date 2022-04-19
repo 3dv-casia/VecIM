@@ -898,7 +898,6 @@ bool building::segment_arrangement_extrusion(std::vector<Plane_3>& m_planes, int
         const int label = fitr->data();
         if (label < 0 || label > m_planes.size()) // include faces label = 0
           continue;
-
         // fixed: 退化为线段的faces处理
         /*
         CGAL::Polygon_2<K_epec> plg;
