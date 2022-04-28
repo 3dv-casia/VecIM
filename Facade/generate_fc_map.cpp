@@ -4,16 +4,115 @@
 #include <malloc.h>
 
 #include <CGAL/Iso_rectangle_2.h>
+/*
+K_epec::Segment_2 merge_seg(vector<K_epec::Segment_2>& segments, vector<int>& idxs){
+    if(idxs.size() == 1)
+      return segments[idxs[0]];
+    double len = 0;
+    double px = 0;
+    double py = 0;
+    for(auto& i: idxs){
+        len += sqrt(CGAL::to_double(segments[i].squared_length()));
+        px += CGAL::to_double((CGAL::midpoint(segments[i].min(), segments[i].max())).x()) * sqrt(CGAL::to_double(segments[i].squared_length()));
+        py += CGAL::to_double((CGAL::midpoint(segments[i].min(), segments[i].max())).y()) * sqrt(CGAL::to_double(segments[i].squared_length()));
+    }
+    K_epec::Line_2 l(K_epec::Point_2(px/len, py/len), segments[idxs[0]].to_vector());
+    K_epec::Point_2 p1 = l.projection(segments[idxs[0]].min());
+    K_epec::Point_2 p2 = l.projection(segments[idxs[0]].max());
+    for(int i = 1; i < idxs.size(); i++){
+        p1 = p1 < l.projection(segments[idxs[i]].min())? p1 : l.projection(segments[idxs[i]].min());
+        p2 = p2 > l.projection(segments[idxs[i]].max())? p2 : l.projection(segments[idxs[i]].max());
+    }
+    return K_epec::Segment_2(p1, p2);
+}
 
-
-void merge(vector<K_epec::Segment_2>& segments){
+void merge(vector<K_epec::Segment_2>& segments, const Point_2& corner){
     constexpr double EPSILON_ANGLE = 0.99984769515; // cos1 degree
-    constexpr double EPSILON_DISTANCE = 1.0e-6;
+    constexpr double EPSILON_DISTANCE = 1.0e-8;
+    typedef CGAL::Cartesian_converter<K_epec, K> To_geom;
+    To_geom to_geom;
+    typedef CGAL::Cartesian_converter<K, K_epec> To_geom2;
+    To_geom2 to_geom2;
+    sort(segments.begin(), segments.end(), [](K_epec::Segment_2& s1, K_epec::Segment_2& s2){return CGAL::to_double(s1.squared_length()) > CGAL::to_double(s2.squared_length());});
+    vector<int> visit(segments.size(), 0);
+    struct parallel_dis{
+        double dis = 0;
+        int idx = -1;
+        parallel_dis(double dis_, int idx_):dis(dis_), idx(idx_){}
+        bool operator < (const parallel_dis& s) const
+        {
+            return dis > s.dis;
+        }
+    };
+    // regular then cluster parallel segments into different sets
+    vector<K_epec::Segment_2> re_segments;
+    for(int i = 0; i < segments.size(); i++){
+        if(visit[i] == 1)
+           continue;
+        visit[i] = 1;
+        set<parallel_dis> sub_p;
+        K_epec::Segment_2 s1 = segments[i];
+        Point_2 p1 = to_geom(s1.min());
+        Point_2 p2 = to_geom(s1.max());
+        Vector_2 v1(p1, p2);
+        double len1 = CGAL::sqrt(v1.squared_length());
+        sub_p.insert(parallel_dis(CGAL::squared_distance(corner, Line_2(p1, p2)), i));
+        for(int j = i+1; j < segments.size(); j++){
+            if(visit[j] == 1)
+               continue;
+            K_epec::Segment_2& s2 = segments[j];
+            Point_2 p3 = to_geom(s2.min());
+            Point_2 p4 = to_geom(s2.max());
+            Vector_2 v2(p3, p4);
+            double len2 = CGAL::sqrt(v2.squared_length());
+            double cos = v1 * v2 / (len1 * len2);
+            double d = robust_squared_distance(p1, p2, p3, p4);
+            if(cos >= EPSILON_ANGLE && d <= EPSILON_DISTANCE){ 
+                Point_2 mid = CGAL::midpoint(p3, p4);
+                Line_2 l(mid, v1);
+                s2 = to_geom2(Segment_2(l.projection(p3), l.projection(p4))); // adjust s2 to parallel to s1
+                sub_p.insert(parallel_dis(CGAL::squared_distance(corner, l), j));
+                visit[j] = 1;
+            }
+        }
+        if(sub_p.size() == 1)
+          re_segments.push_back(segments[sub_p.begin()->idx]);
+        else{
+            for(auto it = sub_p.begin(); it != sub_p.end();){
+                auto prev = it++;
+                vector<int> merge_idx;
+                merge_idx.push_back(prev->idx);
+                while(it != sub_p.end()){
+                    double d = robust_squared_distance(to_geom(segments[prev->idx].min()), to_geom(segments[prev->idx].max()), to_geom(segments[it->idx].min()), to_geom(segments[it->idx].max()));
+                    if(d == 0)
+                       LOG(INFO) << "TEST: " << segments[prev->idx] << " " << segments[it->idx];
+                    if(d <= EPSILON_DISTANCE){
+                        merge_idx.push_back(it->idx);
+                        it++;
+                    }
+                    else
+                       break;
+                }
+                re_segments.push_back(merge_seg(segments, merge_idx));
+            }
+        }
+    }
+    segments.clear();
+    segments = re_segments;
+}
+
+void merge(vector<K_epec::Segment_2>& segments, const Point_2& corner){
+    constexpr double EPSILON_ANGLE = 0.99984769515; // cos1 degree
+    constexpr double EPSILON_DISTANCE = 1.0e-8;
+    constexpr double EPSILON_GENERAL = 1.192092896e-07;
     bool merge = false;
     typedef CGAL::Cartesian_converter<K_epec, K> To_geom;
     To_geom to_geom;
     typedef CGAL::Cartesian_converter<K, K_epec> To_geom2;
     To_geom2 to_geom2;
+    //test
+    sort(segments.begin(), segments.end(), [](K_epec::Segment_2& s1, K_epec::Segment_2& s2){return CGAL::to_double(s1.squared_length()) > CGAL::to_double(s2.squared_length());});
+        LOG(INFO) << segments[0].squared_length() << " " << segments[1].squared_length();
     do
     {
         merge = false;
@@ -34,7 +133,8 @@ void merge(vector<K_epec::Segment_2>& segments){
                 double len2 = CGAL::sqrt(v2.squared_length());
                 double cos = v1 * v2 / (len1 * len2);
                 double d = robust_squared_distance(p1, p2, p3, p4);
-                if(cos >= EPSILON_ANGLE && d <= EPSILON_DISTANCE){ //merge
+                double d2 = ((p4.y() - p3.y()) * (p1.x() - p2.x())) - ((p1.y() - p2.y()) * (p4.x() - p3.x()));
+                if(d <= EPSILON_DISTANCE && std::abs(d2) <= EPSILON_GENERAL){ //merge
                     merge = true;
                     Point_2 mid((len1*mid1.x() + len2*mid2.x())/(len1+len2), (len1*mid1.y() + len2*mid2.y())/(len1+len2));
                     Line_2 line(mid, v1 + v2);
@@ -43,7 +143,20 @@ void merge(vector<K_epec::Segment_2>& segments){
                     Point_2 pp3 = line.projection(p3);
                     Point_2 pp4 = line.projection(p4);
                     Point_2 left = pp1 < pp3 ? pp1 : pp3;
-                    Point_2 right = pp2 > pp4 ? pp2: pp4;    
+                    Point_2 right = pp2 > pp4 ? pp2: pp4; 
+                //test
+                if(abs(p1.x() - 14.8663) < 1e-3 && abs(p1.y() + 66.7255) < 1e-3 || abs(p3.x() - 14.8663) < 1e-3 && abs(p3.y() + 66.7255) < 1e-3){
+                    LOG(INFO) << "TEST: " << s2 << " " << s1 << " " << cos << " " << d;
+                    Point_2 mid = CGAL::midpoint(p1, p2);
+                    Line_2 l(mid, v2);
+                    Segment_2 s(l.projection(p1), l.projection(p2));
+                    p1 = s.min(); p2 = s.max();
+                    d = ((p4.y() - p3.y()) * (p1.x() - p2.x())) - ((p1.y() - p2.y()) * (p4.x() - p3.x()));
+                    if(std::abs(d) < 1.192092896e-07)
+                    LOG(INFO) << "PARALLEL " << robust_squared_distance(p1, p2, p3, p4);
+                    else
+                    LOG(INFO) << d;
+                }   
                     segments.erase(segments.begin() + j);
                     segments.erase(segments.begin() + i);              
                     segments.push_back(K_epec::Segment_2(to_geom2(left), to_geom2(right)));
@@ -54,7 +167,7 @@ void merge(vector<K_epec::Segment_2>& segments){
                 break;
         }
     }while(merge);
-}
+}*/
 
 // fixed: generate floor
 bool generate_floor(vector<Plane_3>& floors, cv::Mat& hfmap, cv::Mat& nfmap, vector<Line_2>& intersectf, const cm::Config& config,  Point_3 corner, double step, string wdir){
@@ -83,9 +196,9 @@ bool generate_floor(vector<Plane_3>& floors, cv::Mat& hfmap, cv::Mat& nfmap, vec
         ofstream file(wdir + "floor_intersectf", ios::out);
         file << floors.size() << " " << intersectf.size() << "\n"; 
         for(auto f:floors)
-        file << f.a() << " " << f.b() << " " << f.c() << " " << f.d() << "\n";
+        file << setiosflags(ios::fixed) << setprecision(8) << f.a() << " " << f.b() << " " << f.c() << " " << f.d() << "\n";
         for(auto s:intersectf)
-        file << s.a() << " " << s.b() << " " << s.c() << "\n";
+        file << setiosflags(ios::fixed) << setprecision(8) << s.a() << " " << s.b() << " " << s.c() << "\n";
         file.close();
     }
     else{ // load from file
@@ -310,11 +423,7 @@ bool generate_ceiling(vector<Plane_3>& ceilings, cv::Mat& hcmap, cv::Mat& ncmap,
 
 // non-manifold and normal condition
 bool generate_fc(vector<Segment_2>& segments, const Point_3 cornerz, const Point_2 length, const cm::Config& config, string wdir){
-    typedef CGAL::Cartesian_converter<K, K_epec> To_geom;
-    To_geom to_geom;
-    vector<K_epec::Segment_2> selected;
-    for(auto s: segments)
-      selected.push_back(to_geom(s));
+    I2E to_exact;
 
     // generate grid arr
     double step = *(config.get_optional<double>("arr.step"));
@@ -342,36 +451,36 @@ bool generate_fc(vector<Segment_2>& segments, const Point_3 cornerz, const Point
     }
     // bbox
     const Point_2 corner2(corner.x()+length.x(), corner.y()-length.y());
-    CGAL::Iso_rectangle_2<K_epec> bbox(to_geom(corner), to_geom(corner2)); 
+    CGAL::Iso_rectangle_2<K_epec> bbox(to_exact(corner), to_exact(corner2)); 
     // push all segment together
     vector<K_epec::Segment_2> total_segs;
 
     //1. push intersection segments
     for(auto &l:intersectf)
-     if(auto result = CGAL::intersection(bbox, to_geom(l)))
+     if(auto result = CGAL::intersection(bbox, to_exact(l)))
         if(K_epec::Segment_2* rl = boost::get<K_epec::Segment_2>(&*result))
           total_segs.push_back(*rl);
         
     for(auto &l:intersectc)
-     if(auto result = CGAL::intersection(bbox, to_geom(l)))
+     if(auto result = CGAL::intersection(bbox, to_exact(l)))
         if(K_epec::Segment_2* rl = boost::get<K_epec::Segment_2>(&*result))
           total_segs.push_back(*rl);
           
     //2. push extended facade segments
-    std:vector<Segment_2> segments_ex;
+    vector<K_epec::Segment_2> selected;
     double extend = *(config.get_optional<double>("arr.extend"));
     double dialog = CGAL::sqrt(length.x()*length.x() + length.y()*length.y());
     for(auto s: segments){
-        const auto mid = CGAL::midpoint(s.source(), s.target());
-        const auto len = CGAL::sqrt(s.squared_length());
-        const auto dir = s.to_vector()/len;
-        segments_ex.push_back({mid + (len/2 + extend*dialog)*dir, mid - (len/2 + extend*dialog)*dir});
-        total_segs.push_back(K_epec::Segment_2(to_geom(segments_ex.back().source()), to_geom(segments_ex.back().target()))); 
+        selected.push_back(to_exact(s));
+        const auto mid = CGAL::midpoint(selected.back().source(), selected.back().target());
+        const double len = CGAL::sqrt(s.squared_length());
+        const auto dir = selected.back().to_vector()/len;
+        total_segs.push_back({mid + (len/2 + extend*dialog)*dir, mid - (len/2 + extend*dialog)*dir});
     }
 
    
     // TODO:merge close segments in total_segs
-    merge(total_segs);
+    //merge(total_segs, corner);
 
     
     //3. add bounding segments to close the arrangement
@@ -678,14 +787,14 @@ bool generate_modeling(string wdir){
     vector<Point_3>::iterator it;
 
     string fname[4] = {"ceiling_vec.ply", "floor_vec.ply", "facade_vec.ply", "cylinder_vec.ply"};
-    Mesh mesh;
+    Mesh<Point_3> mesh;
     for(int k = 0; k < sizeof(fname)/sizeof(fname[0]); k++){
         ifstream ifs(wdir + fname[k]);
         if(!ifs) continue;
         ifs.close();
         if(k == 0) PLYMeshLoad(wdir+fname[k], mesh);
         else{
-            Mesh sub_mesh;
+            Mesh<Point_3> sub_mesh;
             PLYMeshLoad(wdir+fname[k], sub_mesh);       
             for(auto v: sub_mesh.vertices){
                auto it = find(mesh.vertices.begin(),mesh.vertices.end(),v);

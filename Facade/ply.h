@@ -30,8 +30,8 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 */
 
-//#ifndef __PLY_H__
-#define __PLY_H__
+#ifndef _PLY_H_
+#define _PLY_H_
 
 #ifdef __cplusplus
 extern "C"
@@ -48,7 +48,7 @@ extern "C"
 #define PLY_OKAY 0   /* ply routine worked okay */
 #define PLY_ERROR -1 /* error in ply routine */
 
-	/* scalar data types supported by PLY format */
+/* scalar data types supported by PLY format */
 
 #define PLY_START_TYPE 0
 #define PLY_CHAR 1
@@ -170,4 +170,4 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-//#endif /* !__PLY_H__ */
+//#endif /* !_PLY_H_ */

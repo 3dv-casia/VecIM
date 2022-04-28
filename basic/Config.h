@@ -1,5 +1,5 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
 
 #include <string>
 
@@ -48,4 +48,4 @@ inline void write_config(const std::string &file) {
 
 } // namespace cm
 
-#endif // CONFIG_H
+#endif // _CONFIG_H_

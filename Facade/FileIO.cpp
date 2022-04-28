@@ -2,7 +2,7 @@
 #include "base.h"
 #include <glog/logging.h>
 
-//polygon mesh
+// generate polygon mesh
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/Polygon_mesh_processing/remesh.h>
 #include <CGAL/Polygon_mesh_processing/border.h>
@@ -12,22 +12,22 @@
 
 typedef struct Vertex
 {
-  float x,y,z;
-  float nx,ny,nz;
-  uint8_t r,g,b;
+	float x, y, z;
+	float nx, ny, nz;
+	uint8_t r, g, b;
 } Vertex;
 
 typedef struct Face
 {
-	unsigned char nverts;	/* number of vertex indices in list */
-	int *verts;				 /* vertex index list */
+	unsigned char nverts; 		// number of vertex indices in list 
+	int *verts; 		// vertex index list 
 } Face;
 
 char *elem_names[] = {(char*)"vertex", (char*)"face"};
 
 PlyProperty vert_props[] = 
 {
-	/* list of property information for a vertex */
+	// list of property information for a vertex
 	{(char*)"x", PLY_FLOAT, PLY_FLOAT, offsetof(Vertex, x), 0, 0, 0, 0},
 	{(char*)"y", PLY_FLOAT, PLY_FLOAT, offsetof(Vertex, y), 0, 0, 0, 0},
 	{(char*)"z", PLY_FLOAT, PLY_FLOAT, offsetof(Vertex, z), 0, 0, 0, 0},
@@ -41,15 +41,14 @@ PlyProperty vert_props[] =
 
 PlyProperty face_props[] = 
 {
-	/* list of property information for a vertex */
+	// list of property information for a vertex 
 	{(char*)"vertex_indices", PLY_INT, PLY_INT, offsetof(Face, verts), 1, PLY_UCHAR, PLY_UCHAR, offsetof(Face, nverts)},
 };
 
-// read pointcloud to 3d points
 bool PLYPointLoad3(const string fileName, Pwn_vector& points)
 {
 	if (fileName.empty())
-		return 0;
+		return false;
 	PlyFile *ply;
 	PlyProperty **plist;
 	int nelems;
@@ -79,26 +78,21 @@ bool PLYPointLoad3(const string fileName, Pwn_vector& points)
 			ply_get_property(ply, (char*)"vertex", &vert_props[5]);
 
 			Vertex vertex;			
-			//for (unsigned long long j = 0; j < num_elems; j++)
 			for (unsigned long long j = 0; j < num_elems; j++)
 			{
 				ply_get_element(ply, (void *)&vertex);
-                                
-                                points.push_back(make_pair(Point_3(vertex.x, vertex.y, vertex.z),Vector_3(vertex.nx, vertex.ny, vertex.nz)));
- 
+                points.push_back(make_pair(Point_3(vertex.x, vertex.y, vertex.z),Vector_3(vertex.nx, vertex.ny, vertex.nz)));
 			}
 		}
 	}
-
 	ply_close(ply);
-	return 1;
+	return true;
 }
 
-// load mesh ply file
-bool PLYMeshLoad(string fileName, Mesh& mesh)
+bool PLYMeshLoad(string fileName, Mesh<Point_3>& mesh)
 {
 	if (fileName.empty())
-		return 0;
+		return false;
 	mesh.vertices.clear();
 	mesh.faces.clear();
 
@@ -150,16 +144,14 @@ bool PLYMeshLoad(string fileName, Mesh& mesh)
 			}
 		}
 	}
-
 	ply_close(ply);
-	return 1;
+	return true;
 }
 
-// save pointcloud 
 bool PLYPointSave(const string fileName, Pwn_vector& points, int type)
 {
 	if (points.empty() || fileName.empty())
-		return 0;
+		return false;
 
 	unsigned long long pointsNum = points.size();
 	PlyFile *ply;
@@ -193,14 +185,13 @@ bool PLYPointSave(const string fileName, Pwn_vector& points, int type)
 	}	
 	
 	ply_close(ply);
-	return 1;
+	return true;
 }
 
-// save planes mesh
-bool PLYMeshSave(const string fileName, Mesh& mesh, int type)
+bool PLYMeshSave(const string fileName, Mesh<Point_3>& mesh, int type)
 {
 	if (mesh.vertices.empty() || fileName.empty())
-		return 0;
+		return false;
 
 	unsigned long long vertexNum = mesh.vertices.size();
 	unsigned long long faceNum = mesh.faces.size();
@@ -244,27 +235,26 @@ bool PLYMeshSave(const string fileName, Mesh& mesh, int type)
 	}
 	
 	ply_close(ply);
-	return 1;
+	return true;
 }
 
-// save off 
-bool OFFMeshSave(const string fileName, Mesh& mesh){
+bool OFFMeshSave(const string fileName, Mesh<K_epec::Point_3>& mesh){
     // merge
     ofstream ofs(fileName);
     ofs << "COFF\n" << mesh.vertices.size() << ' ' << mesh.faces.size() << ' ' << "0\n";
      for (const auto &p : mesh.vertices)
-       ofs << p.x() << ' ' << p.y() << ' ' << p.z() << '\n';
+       ofs << setiosflags(ios::fixed) << setprecision(8) << p.x() << ' ' << p.y() << ' ' << p.z() << '\n';
      for(auto poly: mesh.faces)
         ofs << 3 << " " << poly[0] << " " << poly[1] << " " << poly[2] << "\n";
      ofs.close();
 }
 
 // polygon mesh
-typedef CGAL::Surface_mesh<Point_3> Mesh3;
-typedef boost::graph_traits<Mesh3>::halfedge_descriptor halfedge_descriptor;
-typedef boost::graph_traits<Mesh3>::edge_descriptor     edge_descriptor;
-typedef Mesh3::Vertex_index vertex_descriptor;
-typedef Mesh3::Face_index face_descriptor;
+typedef CGAL::Surface_mesh<Point_3> 		Mesh3;
+typedef boost::graph_traits<Mesh3>::halfedge_descriptor 		halfedge_descriptor;
+typedef boost::graph_traits<Mesh3>::edge_descriptor 		edge_descriptor;
+typedef Mesh3::Vertex_index 		vertex_descriptor;
+typedef Mesh3::Face_index 		face_descriptor;
 namespace PMP = CGAL::Polygon_mesh_processing;
 
 struct halfedge2edge
@@ -280,10 +270,7 @@ struct halfedge2edge
   std::vector<edge_descriptor>& m_edges;
 };
 
-/* 
-  Function: Save as triangle mesh
-*/
-bool PLYTriMeshSave(Mesh& ori_mesh, const cm::Config& config, string& name){
+bool PLYTriMeshSave(Mesh<Point_3>& ori_mesh, const cm::Config& config, string& name){
 	Mesh3 tri_mesh;
 	vector<vertex_descriptor> vertexmap(ori_mesh.vertices.size());
 	for(int i = 0; i < ori_mesh.vertices.size(); i++){
@@ -294,14 +281,6 @@ bool PLYTriMeshSave(Mesh& ori_mesh, const cm::Config& config, string& name){
 		tri_mesh.add_face(vertexmap[f.x()], vertexmap[f.y()], vertexmap[f.z()]);
 	}
 	LOG(INFO) << "Before remshing: #face: " << tri_mesh.number_of_faces() << ", #vertices: " << tri_mesh.number_of_vertices();	
-	/*
-	const char* filename = "/floor_vec.off";
-    std::ifstream input(filename);
-	if (!input || !(input >> tri_mesh) ){//|| !CGAL::is_triangle_mesh(tri_mesh)) {
-       LOG(INFO) << "Error: not a valid triangle mesh.";
-       return false;
-    }
-	*/
 	if (!CGAL::is_triangle_mesh(tri_mesh)) {
        LOG(INFO) << "Error: not a valid triangle mesh.";
        return false;
@@ -324,8 +303,8 @@ bool PLYTriMeshSave(Mesh& ori_mesh, const cm::Config& config, string& name){
 		.protect_constraints(true)//i.e. protect border, here
 	);
 	LOG(INFO) << "After remeshing: #face: " << tri_mesh.number_of_faces() << " , #vertices: " << tri_mesh.number_of_vertices();
-	// store in Mesh
-	Mesh mesh;
+
+	Mesh<Point_3> mesh;
 	for (auto &f : tri_mesh.faces()) {
 		CGAL::Vertex_around_face_iterator<Mesh3> vbegin, vend;
 		vector<int> idx;

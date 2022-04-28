@@ -82,18 +82,18 @@ void PtoS(Plane* plane,Pwn_vector& points,int num,vector<Line>& lines, vector<Se
 void Clean(vector<Circle>& circles, float r){
      sort(circles.begin(),circles.end());// 降序
      for(int i = 0; i < circles.size();i++){
-       if(circles[i].radious > r){
+       if(circles[i].radius > r){
          circles[i].flag = 0;
          continue;
        }
        if(circles[i].flag == 0) continue;
        for(int j = i+1; j < circles.size();j++){
-          if(circles[j].radious > r){
+          if(circles[j].radius > r){
            circles[j].flag = 0;
            continue;
           }
           if(circles[j].flag == 0) continue;        
-          if (sqrt((circles[i].center-circles[j].center).squared_length()) < circles[i].radious + circles[j].radious)
+          if (sqrt((circles[i].center-circles[j].center).squared_length()) < circles[i].radius + circles[j].radius)
              circles[j].flag = 0;
        }
      }
@@ -198,10 +198,10 @@ bool Toplane(vector<Circle>& circles, string wdir){
     if (circles[i].flag == 0) continue;
     num++;
     // 8 points
-    Vector_2 add[8] ={Vector_2(0, circles[i].radious), Vector_2(circles[i].radious/1.414,circles[i].radious/1.414), 
-                      Vector_2(circles[i].radious, 0), Vector_2(circles[i].radious/1.414, -circles[i].radious/1.414), 
-                      Vector_2(0, -circles[i].radious), Vector_2(-circles[i].radious/1.414, -circles[i].radious/1.414), 
-                      Vector_2(-circles[i].radious, 0), Vector_2(-circles[i].radious/1.414, circles[i].radious/1.414)};
+    Vector_2 add[8] ={Vector_2(0, circles[i].radius), Vector_2(circles[i].radius/1.414,circles[i].radius/1.414), 
+                      Vector_2(circles[i].radius, 0), Vector_2(circles[i].radius/1.414, -circles[i].radius/1.414), 
+                      Vector_2(0, -circles[i].radius), Vector_2(-circles[i].radius/1.414, -circles[i].radius/1.414), 
+                      Vector_2(-circles[i].radius, 0), Vector_2(-circles[i].radius/1.414, circles[i].radius/1.414)};
 
     for(int j = 0; j < 8; j++)
       vertexes.push_back(circles[i].center + add[j]);
@@ -265,7 +265,7 @@ bool Toplane(vector<Circle>& circles, string wdir){
   vector<vector<int>> polysf;
   vector<Point_3> pointsc;
   vector<vector<int>> polysc;
-  Mesh meshf,meshc;
+  Mesh<Point_3> meshf,meshc;
   PLYMeshLoad(floor, meshf);
   PLYMeshLoad(ceiling, meshc);
 
@@ -335,7 +335,7 @@ bool Toplane(vector<Circle>& circles, string wdir){
   ofs.close();
 */
   string ofs = wdir + "cylinder_vec.ply";
-  Mesh mesh;
+  Mesh<Point_3> mesh;
   for(auto& p: points)
     mesh.vertices.push_back(p);
   for(auto& poly: polygons){
@@ -348,7 +348,6 @@ bool Toplane(vector<Circle>& circles, string wdir){
   return true;
 }
 
-// RANSAC 3D plane detection
 bool ransac_detection_p(Pwn_vector& points, float probability, int min_points, float epsilon, float cluster_epsilon, float normal_threshold, float cos_angle, vector<Line>& lines, string wdir)
 {
   // timer
@@ -512,10 +511,9 @@ bool ransac_detection_p(Pwn_vector& points, float probability, int min_points, f
   return 1;
 }
 
-// RANCAC 3D cylinder detection
-bool ransac_detection_c(Pwn_vector& points, float radious, float probability, int min_points, float epsilon, float cluster_epsilon, float normal_threshold, float cos_angle, vector<Circle>& circles, string wdir){
+bool ransac_detection_c(Pwn_vector& points, float radius, float probability, int min_points, float epsilon, float cluster_epsilon, float normal_threshold, float cos_angle, vector<Circle>& circles, string wdir){
 // timer
-  clock_t start,mid,end;
+  clock_t start, mid, end;
   start = clock(); 
   
   Efficient_ransac ransac;
@@ -536,7 +534,7 @@ bool ransac_detection_c(Pwn_vector& points, float radious, float probability, in
      << ransac.number_of_unassigned_points()
      << " unassigned points." ;
 
-  if (ransac.shapes().end() - ransac.shapes().begin() ==0){
+  if (ransac.shapes().end() - ransac.shapes().begin() == 0){
     LOG(INFO) << "No cylinder is detected.";
     return 0;
   }
@@ -564,7 +562,7 @@ bool ransac_detection_c(Pwn_vector& points, float radious, float probability, in
 	        if(const Point_3* pt = boost::get<Point_3>(&*result))	
 	            circles.push_back(Circle(Point_2(pt->x(), pt->y()),cylinder->radius(),cylinder->indices_of_assigned_points().end()-cylinder->indices_of_assigned_points().begin(), 0, 0));
            else
-             LOG(INFO) << "Cylinder detection faled! ";       
+             LOG(INFO) << "Cylinder detection is faled! ";       
       }  
     // Proceeds with next detected shape.
     it++;
@@ -574,7 +572,7 @@ bool ransac_detection_c(Pwn_vector& points, float radious, float probability, in
   LOG(INFO) << num << " cylinders are generated. ";
   
   // exclude intersection circles
-  Clean(circles, radious);
+  Clean(circles, radius);
 
   // valid circles produce eight planes
   if(!Toplane(circles, wdir))
@@ -585,7 +583,7 @@ bool ransac_detection_c(Pwn_vector& points, float radious, float probability, in
   ofstream ofs(fname);
   for(int i = 0; i < circles.size(); i++){
     if (circles[i].flag == 0) continue;
-    ofs << circles[i].center.x() << " " << circles[i].center.y() <<" "<< circles[i].radious << "\n";
+    ofs << circles[i].center.x() << " " << circles[i].center.y() <<" "<< circles[i].radius << "\n";
   }
   ofs.close();
 
@@ -616,7 +614,7 @@ bool ransac_detection_fc(Pwn_vector& points, float probability, int min_points, 
   // Prints number of detected shapes and unassigned points.
   LOG(INFO) << ransac.number_of_unassigned_points() << " unassigned points." ;
 
-  if (ransac.shapes().end() - ransac.shapes().begin() ==0)
+  if (ransac.shapes().end() - ransac.shapes().begin() == 0)
 	return 0;
 
   double height = 0;

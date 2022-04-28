@@ -1,12 +1,16 @@
-#include "base.h"
+#ifndef _ARR_H_ 
+#define _ARR_H_
 
+#include "base.h"
 #include <opencv2/core.hpp>
+#include <iomanip>
 
 #include <CGAL/Arr_segment_traits_2.h>
 #include <CGAL/Arrangement_2.h>
 #include <CGAL/Arr_extended_dcel.h>
 #include <CGAL/Arr_overlay_2.h>
 #include <CGAL/Arr_default_overlay_traits.h>
+#include <CGAL/squared_distance_2.h>
 
 
 
@@ -212,3 +216,4 @@ private:
 
 };
 
+#endif // _ARR_H_

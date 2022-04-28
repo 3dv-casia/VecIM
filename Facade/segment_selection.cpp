@@ -29,11 +29,11 @@ void optimize(vector<Segment_2>& selected, unordered_map<Point_2, int>& points_i
 
 
    double total_points = 0;
-   float dist_thethold = 0; // max distance between points and lines
+   double dist_thethold = 0; // max distance between points and lines
    vector<Point_3> pointsets;
    for (int i = 0; i<lines.size(); i++){
 	total_points += lines[i].pointset.size();
-	dist_thethold = max(lines[i].distance,dist_thethold);
+	dist_thethold = max(lines[i].distance, dist_thethold);
 	for (int j = 0; j<lines[i].pointset.size(); j++)
 	   pointsets.push_back(lines[i].pointset[j]);
    }
@@ -85,16 +85,14 @@ void optimize(vector<Segment_2>& selected, unordered_map<Point_2, int>& points_i
    vector<double> support_num(segments.size(), 0);
    vector<vector<Point_2>> support_pp(segments.size());// support points projection
    // fixed: accurate computation
-   	typedef CGAL::Cartesian_converter<K_epec, K> To_geom;
-    To_geom to_geom;
-   	typedef CGAL::Cartesian_converter<K, K_epec> To_geom2;
-    To_geom2 to_geom2;
+   E2I to_inexact;
+   I2E to_exact;
    for(int i = 0; i < segments.size(); i++){
 	int id = segments[i].ID; // line
 	int n = 0;
 	for (int j = 0; j < lines[id].pointset.size(); j++){
 	  K_epec::Point_2 p = K_epec::Point_2(lines[id].pointset[j].x(), lines[id].pointset[j].y());
-	  K_epec::Line_2 l(to_geom2(segments[i].segment2.source()), to_geom2(segments[i].segment2.target()));
+	  K_epec::Line_2 l(to_exact(segments[i].segment2.source()), to_exact(segments[i].segment2.target()));
 	  K_epec::Point_2 pp = l.projection(p);
 	  double s = segments[i].segment2.source().x();
 	  double t = segments[i].segment2.target().x();
@@ -113,7 +111,7 @@ void optimize(vector<Segment_2>& selected, unordered_map<Point_2, int>& points_i
 		n++;
 		//support_num[i] += 1-(sqrt((p-pp).squared_length()))/(dist_thethold);
 		support_num[i] += 1;
-		support_pp[i].push_back(to_geom(pp));
+		support_pp[i].push_back(to_inexact(pp));
 	  }
 	}
    }    
@@ -149,7 +147,7 @@ void optimize(vector<Segment_2>& selected, unordered_map<Point_2, int>& points_i
 
    // linear
    program_.clear();
-   LinearObjective* objective =      program_.create_objective(LinearObjective::MINIMIZE);
+   LinearObjective* objective = program_.create_objective(LinearObjective::MINIMIZE);
 
  // set
    const vector<Variable*>& variables =    program_.create_n_variables(total_variables);
@@ -404,7 +402,7 @@ void optimize(vector<Segment_2>& selected, unordered_map<Point_2, int>& points_i
   
 }	
 
-void optimize2(vector<Facade>& potential_facades, vector<IntersectPoint>& points, vector<int>& isolate_seg, vector<int>& suppoints_num, vector<double>& area_ratio, double lambda_data_fitting, double lambda_model_coverage, double lambda_model_complexity, string wdir){
+void optimize2(vector<Facade>& potential_facades, vector<IntersectPoint>& points, vector<int>& suppoints_num, vector<double>& area_ratio, double lambda_data_fitting, double lambda_model_coverage, double lambda_model_complexity, string wdir){
    
    if(potential_facades.size() != suppoints_num.size()){
 	   LOG(INFO) << "Variables Error. ";
@@ -423,13 +421,6 @@ void optimize2(vector<Facade>& potential_facades, vector<IntersectPoint>& points
    for (int i = 0; i< suppoints_num.size(); i++)
 	total_points += suppoints_num[i];
 
-/*
-   // test
-   for (int i = 0; i< suppoints_num.size(); i++){
-	   LOG(INFO) << potential_facades[i].seg << " " << suppoints_num[i]/total_points << " " << area_ratio[i];
-   }
-*/
-
    // binary variables:
 	// x[0] ... x[num_facades - 1] : binary labels of all the potential facades
 	// x[num_facades] ... x[num_facades + num_points] : binary labels of all the intersecting points (remain or not)
@@ -444,7 +435,7 @@ void optimize2(vector<Facade>& potential_facades, vector<IntersectPoint>& points
    double coeff_coverage = total_points * lambda_model_coverage;
    double coeff_complexity = total_points * lambda_model_complexity / double(points.size());
    LOG(INFO) << "coeff_data_fitting: " << lambda_data_fitting;
-   LOG(INFO) << "coeff_coverage: " << coeff_coverage ;
+   LOG(INFO) << "coeff_coverage: " << coeff_coverage;
    LOG(INFO) << "coeff_complexity: " << coeff_complexity;
 
    // linear
@@ -495,25 +486,13 @@ void optimize2(vector<Facade>& potential_facades, vector<IntersectPoint>& points
    	// Add constraints: points 0 2 3 4
 	LinearConstraint* c1 = program_.create_constraint();
 	LinearConstraint* c2 = program_.create_constraint();
-	//test
-	if(points[i].p.x() < 282 && points[i].p.x() > 274.26 && points[i].p.y() < 271 && points[i].p.y() > 264.34){
-		LOG(INFO) << "TEST4: " << points[i].p;
-		test = num_facades+i;
-		for(auto k:points[i].IDs)
-		   LOG(INFO) << k << " " << isolate_seg[k] << " " << CGAL::to_double(potential_facades[k].seg.squared_length());
-	}
 	for(int j = 0; j < points[i].IDs.size(); j++){
 	  if(points[i].IDs[j] > num_facades){
 	  LOG(INFO) << "Error: variables undefine.";
 	  return ;
 	  }
-    if(isolate_seg[points[i].IDs[j]] == 1 && CGAL::to_double(potential_facades[points[i].IDs[j]].seg.squared_length()) < 25e-6 || isolate_seg[points[i].IDs[j]] == -1) // the source and target of segments overlap
-        continue;
-    //test
-	 if(points[i].p.x() < 282 && points[i].p.x() > 274.26 && points[i].p.y() < 271 && points[i].p.y() > 264.34){
-	  LOG(INFO) << i << " " <<  points[i].IDs[j];
-	  test2.push_back( points[i].IDs[j]);
-	}
+    //if(isolate_seg[points[i].IDs[j]] == 1 && CGAL::to_double(potential_facades[points[i].IDs[j]].seg.squared_length()) < 25e-6 || isolate_seg[points[i].IDs[j]] == -1) // the source and target of segments overlap
+        //continue;
 	  c1->add_coefficient(points[i].IDs[j], 1.0);
 	  c2->add_coefficient(points[i].IDs[j], -1.0);
 	}
@@ -543,7 +522,8 @@ void optimize2(vector<Facade>& potential_facades, vector<IntersectPoint>& points
 	const vector<double>& X = solver.solution();
 	for(int i = 0; i < num_facades; i++){
 		//LOG(INFO) << X[i]; // test
-	   if (isolate_seg[i] == 1 && CGAL::to_double(potential_facades[i].seg.squared_length()) < 25e-6 || isolate_seg[i] == -1 || static_cast<int>(std::round(X[i])) == 0) 
+	   //if (isolate_seg[i] == 1 && CGAL::to_double(potential_facades[i].seg.squared_length()) < 25e-6 || isolate_seg[i] == -1 || static_cast<int>(std::round(X[i])) == 0) 
+	   if(static_cast<int>(std::round(X[i])) == 0)
 		continue;
 	   else{
 		potential_facades[i].flag = 1;
@@ -715,69 +695,44 @@ bool segment_wall(vector<Segment_2> selected, const cm::Config& config, string w
     return true;
 }
 
-void producemesh(vector<Segment_2>& selected, Mesh& planes, vector<Point_2>& heights, vector<Vector_2>& oritations, double top, double bottom){
-  Point_3 p1, p2, p3, p4;
-	for(int i = 0; i < selected.size(); i++){
-		if (top < bottom){
-			p1 = Point_3(selected[i].source().x(),selected[i].source().y(),heights[i].y());
-			p2 = Point_3(selected[i].source().x(),selected[i].source().y(),heights[i].x());
-			p3 = Point_3(selected[i].target().x(),selected[i].target().y(),heights[i].y());
-			p4 = Point_3(selected[i].target().x(),selected[i].target().y(),heights[i].x());
+void producemesh(vector<Segment_2>& selected, Mesh<K_epec::Point_3>& planes, vector<Point_2>& heights, vector<Vector_2>& oritations, double top, double bottom){
+    K_epec::Point_3 p1, p2, p3, p4;
+	for(int i = 0; i < selected.size(); i++)
+	{
+		if (top < bottom)
+		{
+			p1 = K_epec::Point_3(selected[i].source().x(),selected[i].source().y(),heights[i].y());
+			p2 = K_epec::Point_3(selected[i].source().x(),selected[i].source().y(),heights[i].x());
+			p3 = K_epec::Point_3(selected[i].target().x(),selected[i].target().y(),heights[i].y());
+			p4 = K_epec::Point_3(selected[i].target().x(),selected[i].target().y(),heights[i].x());
 		}
-		else{
-			p1 = Point_3(selected[i].source().x(),selected[i].source().y(),bottom);
-			p2 = Point_3(selected[i].source().x(),selected[i].source().y(),top);
-			p3 = Point_3(selected[i].target().x(),selected[i].target().y(),bottom);
-			p4 = Point_3(selected[i].target().x(),selected[i].target().y(),top);
+		else
+		{
+			p1 = K_epec::Point_3(selected[i].source().x(),selected[i].source().y(),bottom);
+			p2 = K_epec::Point_3(selected[i].source().x(),selected[i].source().y(),top);
+			p3 = K_epec::Point_3(selected[i].target().x(),selected[i].target().y(),bottom);
+			p4 = K_epec::Point_3(selected[i].target().x(),selected[i].target().y(),top);
 		}
-		/*
-		int idx1,idx2,idx3,idx4;
-		vector<Point_3>::iterator it = find(planes.vertices.begin(),planes.vertices.end(),p1);
-		if(it!=planes.vertices.end()) idx1 = distance(planes.vertices.begin(), it);
-		else{
-			idx1 = planes.vertices.size();
-			planes.vertices.push_back(p1);
-		}
-
-		it = find(planes.vertices.begin(),planes.vertices.end(),p2);
-		if(it!=planes.vertices.end()) idx2 = distance(planes.vertices.begin(), it);
-		else{
-		idx2 = planes.vertices.size();
-		planes.vertices.push_back(p2);
-		}
-
-		it = find(planes.vertices.begin(),planes.vertices.end(),p3);
-		if(it!=planes.vertices.end()) idx3 = distance(planes.vertices.begin(), it);
-		else{
-		idx3 = planes.vertices.size();
-		planes.vertices.push_back(p3);
-		}
-
-		it = find(planes.vertices.begin(),planes.vertices.end(),p4);
-		if(it!=planes.vertices.end()) idx4 = distance(planes.vertices.begin(), it);
-		else{
-		idx4 = planes.vertices.size();
-		planes.vertices.push_back(p4);
-		}
-		*/
 		int idx = planes.vertices.size();
 		planes.vertices.push_back(p1); planes.vertices.push_back(p2);
 		planes.vertices.push_back(p3); planes.vertices.push_back(p4);
 		planes.vertices.push_back(p2); planes.vertices.push_back(p3);
-		Vector_3 v;
+		K_epec::Vector_3 v;
 		if(i < oritations.size())
-		v = Vector_3(oritations[i].x(),oritations[i].y(),0);
+			v = K_epec::Vector_3(oritations[i].x(),oritations[i].y(),0);
 		else 
-		Vector_3 Vector_3(0,0,0);
-		Plane_3 plane(p1,p2,p3);
+			v = K_epec::Vector_3(0,0,0);
 
-		if ( plane.orthogonal_vector()*v > 0 ){
-		planes.faces.push_back(Point_3(idx,idx+1,idx+2));
-		planes.faces.push_back(Point_3(idx+5,idx+4,idx+3));
+		K_epec::Plane_3 plane(p1 ,p2, p3);
+		if (plane.orthogonal_vector()*v > 0 )
+		{
+			planes.faces.push_back(K_epec::Point_3(idx, idx+1, idx+2));
+			planes.faces.push_back(K_epec::Point_3(idx+5, idx+4, idx+3));
 		}
-		else{
-		planes.faces.push_back(Point_3(idx+1,idx,idx+2));
-		planes.faces.push_back(Point_3(idx+4,idx+5,idx+3));
+		else
+		{
+			planes.faces.push_back(K_epec::Point_3(idx+1, idx, idx+2));
+			planes.faces.push_back(K_epec::Point_3(idx+4, idx+5, idx+3));
 		}
 	}
 }
