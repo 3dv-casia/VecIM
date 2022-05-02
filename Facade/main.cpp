@@ -33,17 +33,17 @@ int main(int argc, char* argv[])
         LOG(INFO)  << "Failed to load facade points file.";
         return -1;
     }
-    LOG(INFO)  << "Load "<< fapoints.size() << "  facade points. ";
+    LOG(INFO)  << "Load "<< fapoints.size() << " facade points. ";
 
     // record results
     vector<Line> lines;     // facade projection lines
     vector<IntersectPoint> interpoints;     // segment intersection
     vector<Segment> segments;     // facade projection segments
     vector<Segment_2> selected;     // floorplan segments
-    vector<Point_2> heights;    // test
+    vector<Point_2> heights;    // segment z-height
     vector<Vector_2> oritations;    // segment normals
     vector<Segment> bsegments;    // boundary segments 
-    unordered_map<Point_2, int> points_idx; // test
+    unordered_map<Point_2, int> points_idx; // point index in pointcloud
 
     // obtain x and y boundaries
     float xmin = 1e9; float xmax = -1e9; float ymin = 1e9; float ymax = -1e9; float zmin = 1e9;
@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
 
         if (!ransac_detection_p(fapoints, *probability, *min_points, *epsilon, *cluster_epsilon, *normal_threshold, *cos_angle, lines, wdir)) 
         {
-            LOG(INFO)  <<"No facade plane is detected.";
+            LOG(INFO) << "No facade plane is detected.";
             return -1;
         }
         Pwn_vector().swap(fapoints); // clear facade points vector
@@ -103,8 +103,8 @@ int main(int argc, char* argv[])
         const auto lambda_model_coverage = config.get_optional<double>("facade.segment.lamda_model_coverage");
         const auto lambda_model_complexity = config.get_optional<double>("facade.segment.lamda_model_complxity");
         const auto alpha = config.get_optional<double>("facade.segment.alpha");
-
-        optimize(selected, points_idx, heights, oritations, lines, segments, interpoints, bsegments, *lambda_data_fitting, *lambda_model_coverage, *lambda_model_complexity,  (*epsilon)*30, *alpha, wdir);  
+        
+        optimize(selected, points_idx, heights, oritations, lines, segments,  interpoints, bsegments, *lambda_data_fitting, *lambda_model_coverage, *lambda_model_complexity, *alpha, wdir); 
         if(selected.size() == 0)
         {
             LOG(INFO) << "No segment is selected, segment selection is failed.";
@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
     {
         const Point_3 corner(xmin, ymax, zmin);
         const Point_2 length(xmax - xmin, ymax - ymin);
-        if (!generate_fc(selected, corner, length, config, wdir))
+        if (!generate_fcf(selected, corner, length, config, wdir))
         {
             LOG(INFO) << "Floor, ceiling and facade reconstruction is failed.";
             return -1;
@@ -193,7 +193,8 @@ int main(int argc, char* argv[])
     if (config.get_optional<bool>("merge"))
     {
         clock_t m1 = clock();
-        if(!generate_modeling(wdir)){
+        if(!generate_off_modeling(wdir))
+        {
             LOG(INFO) << "Merge failed. ";
             return -1;
         }

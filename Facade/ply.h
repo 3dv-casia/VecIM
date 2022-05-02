@@ -30,7 +30,7 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 */
 
-#ifndef _PLY_H_
+//#ifndef _PLY_H_
 #define _PLY_H_
 
 #ifdef __cplusplus

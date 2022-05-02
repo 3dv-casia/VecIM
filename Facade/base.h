@@ -138,17 +138,17 @@ public:
 };
 
 /*!
- * \description: Facade class for potential facades.
+ * \description: (potential) facades with certain height difference
  */
 class Facade
 {
-public:
-   K_epec::Segment_2 seg; 		// exact 2D projection segment {s, t}
-   vector<double> heights; 		// facade height {s-high, s-low, t-high, t-low}
-   Vector_2 normal; 		// segment normal
-   int flag = 0; 		// selected potential facade (==1) or not (==0)
-   Facade(K_epec::Segment_2 s, vector<double> h):seg(s), heights(h){};
-   Facade(){}
+	public:
+	K_epec::Segment_2 seg; 		// exact 2D projection segment {s, t}
+	vector<double> heights; 		// facade height {s-high, s-low, t-high, t-low}
+	Vector_2 normal; 		// segment normal
+	int flag = 0; 		// selected potential facade (==1) or not (==0)
+	Facade(K_epec::Segment_2 s, vector<double> h):seg(s), heights(h){};
+	Facade(){}
 };
 
 /*!
@@ -162,33 +162,50 @@ public:
 	vector<T> faces;
 };
 
-
 /*!
- * \description: Judge number range
- */
+ * \description: Judge number range.
+ * \param x number
+ * \return whether within the range
+ */ 
 template <class T>
 inline bool number_range(T x){
 	return x < numeric_limits<T>::max() && x > numeric_limits<T>::lowest();
 }
 
 /*!
- * \description: Judge the validation of 2D point
- */
+ * \description: Judge the validation of 2D point.
+ * \param p 2D point
+ * \return whether valid
+ */ 
 inline bool point_2_range(Point_2 p){
   return number_range<double>(p.x()) && number_range<double>(p.y());
+}
+
+/*!
+ * \description: Approximate segment to segment squared distance.
+ * \param s1 first segment source point 
+ * \param t1 first segment target point
+ * \param s2 second segment source point
+ * \param t2 second segment target point
+ * \return squared distance
+ */ 
+inline double robust_squared_distance(const Point_2 &s1, const Point_2 &t1, const Point_2 &s2, const Point_2 &t2) {
+  return segment_segment_squared_distance(
+    s1.x(), s1.y(), t1.x(), t1.y(),
+    s2.x(), s2.y(), t2.x(), t2.y());
 }
 
 
 /******************************FileIO.cpp******************************/
 /*!
- * \description: Load 3D pointcloud from ply file
+ * \description: Load 3D pointcloud from .ply file.
  * \param fileName pointcloud file name to be loaded
  * \param points 3D pointcloud with normal
  */
 bool PLYPointLoad3(const string fileName, Pwn_vector& points);
 
 /*!
- * \description: Save 3D pointcloud into ply file
+ * \description: Save 3D pointcloud into .ply file.
  * \param fileName pointcloud file name to be saved
  * \param points 3D pointcloud with normal
  * \param type storage format (ascii-1, binary_big_endian-2, binary_little_endian-3)
@@ -197,7 +214,7 @@ bool PLYPointLoad3(const string fileName, Pwn_vector& points);
 bool PLYPointSave(const string fileName, Pwn_vector& points, int type = 3);
 
 /*!
- * \description: Save 3D mesh into ply file
+ * \description: Save 3D mesh into .ply file.
  * \param fileName mesh file name to be saved
  * \param mesh 3D mesh
  * \param type storage format (ascii-1, binary_big_endian-2, binary_little_endian-3)
@@ -206,7 +223,7 @@ bool PLYPointSave(const string fileName, Pwn_vector& points, int type = 3);
 bool PLYMeshSave(const string fileName, Mesh<Point_3>& mesh, int type = 3);
 
 /*!
- * \description: Save 3D mesh into off file
+ * \description: Save 3D mesh into .off file.
  * \param fileName mesh file name to be saved
  * \param mesh 3D mesh
  * \return 
@@ -214,7 +231,7 @@ bool PLYMeshSave(const string fileName, Mesh<Point_3>& mesh, int type = 3);
 bool OFFMeshSave(const string fileName, Mesh<K_epec::Point_3>& mesh);
 
 /*!
- * \description: Load 3D mesh from ply file
+ * \description: Load 3D mesh from .ply file.
  * \param fileName file name to be loaded
  * \param mesh 3D mesh
  * \return 
@@ -222,7 +239,7 @@ bool OFFMeshSave(const string fileName, Mesh<K_epec::Point_3>& mesh);
 bool PLYMeshLoad(string fileName, Mesh<Point_3>& mesh);
 
 /*!
- * \description: Save 3D mesh into ply file with adaptive triangle facets
+ * \description: Save 3D mesh into .ply file with adaptive triangle facets.
  * \param mesh 3D triangle mesh
  * \param config configuration file
  * \param filename mesh file name to be saved
@@ -233,7 +250,7 @@ bool PLYTriMeshSave(Mesh<Point_3>& mesh, const cm::Config& config, string& filen
 
 /******************************ransac_detection.cpp******************************/
 /*!
- * \description: detect 3D facade planes from facade pointcloud by RANSAC
+ * \description: Detect 3D facade planes from facade pointcloud by RANSAC.
  * \param points facade pointcloud
  * \param probability RANSAC parameter
  * \param min_points RANSAC parameter
@@ -242,13 +259,13 @@ bool PLYTriMeshSave(Mesh<Point_3>& mesh, const cm::Config& config, string& filen
  * \param normal_threshold RANSAC parameter
  * \param cos_angle RANSAC parameter
  * \param lines facade projection lines
- * \param wdir file save directory
+ * \param wdir file save/load directory
  * \return 
  */
 bool ransac_detection_p(Pwn_vector& points, float probability, int min_points, float epsilon, float cluster_epsilon, float normal_threshold, float cos_angle, vector<Line>& lines, string wdir);
 
 /*!
- * \description: detect 3D cylinder from cylinder pointcloud by RANSAC
+ * \description: Detect 3D cylinders from cylinder pointcloud by RANSAC.
  * \param points cylinder pointcloud
  * \param radius cylinder radius threshold
  * \param probability RANSAC parameter
@@ -258,52 +275,175 @@ bool ransac_detection_p(Pwn_vector& points, float probability, int min_points, f
  * \param normal_threshold RANSAC parameter
  * \param cos_angle RANSAC parameter
  * \param circles facade projection lines
- * \param wdir file save directory
+ * \param wdir file save/load directory
  * \return 
  */
 bool ransac_detection_c(Pwn_vector& points, float radius, float probability, int min_points, float epsilon, float cluster_epsilon, float normal_threshold, float cos_angle, vector<Circle>& circles, string wdir);
 
-
-bool ransac_detection_fc(Pwn_vector& points, float probability, int min_points, float epsilon, float cluster_epsilon, float normal_threshold, float cos_angle, string wdir, string object);
-
-bool ransac_detection_floor(Pwn_vector& points,  vector<Plane_3>& floors, vector<Line_2>& intersects, const cm::Config& config, string wdir);
-
-bool ransac_detection_ceiling(Pwn_vector& points,  vector<Plane_3>& ceilings, vector<Line_2>& intersects, const cm::Config& config, string wdir);
-
-// hypothesis_generator.cpp
-bool generation(vector<Line>& lines, vector<Segment>& bsegments, vector<Segment>& segments, unordered_map<Point_2, int>& points_idx, vector<IntersectPoint>& points, float angle_thetad, float num_threshold, float extend_length, string wdir);
-
-// segment_selection.cpp
-void optimize(vector<Segment_2>& selected, unordered_map<Point_2, int>& points_idx, vector<Point_2>& heights, vector<Vector_2>& oritations, vector<Line>& lines, vector<Segment>& segments, vector<IntersectPoint>& points, vector<Segment>& bsegments, double lambda_data_fitting, double lambda_model_coverage, double lambda_model_complexity, double epsilon, double alpha, string wdir);
-void optimize2(vector<Facade>& potential_facade, vector<IntersectPoint>& points, vector<int>& suppoints_num, vector<double>& area_ratio, double lambda_data_fitting, double lambda_model_coverage, double lambda_model_complexity, string wdir);
-void normal_adjust(vector<Segment_2> segments, vector<Vector_2>& oritations);
-void producemesh(vector<Segment_2>& selected, Mesh<K_epec::Point_3>& planes, vector<Point_2>& heights, vector<Vector_2>& oritations, double top=0, double bottom=1);
-bool segment_wall(vector<Segment_2> selected, const cm::Config& config, string wdir);
-
-// kdtree_search.cpp
-float density(int size, vector<Point_3>& pointsets);
-
-//generate_fc_map.cpp
-bool generate_fc(vector<Segment_2> & segments, const Point_3 corner, const Point_2 length, const cm::Config& config, string wdir);
-bool generate_fc(vector<Segment_2> segments, double top, double bottom, string wdir);
-bool generate_floor(vector<Plane_3>& floors, cv::Mat& hfmap, cv::Mat& nfmap, vector<Line_2>& intersectf, const cm::Config& config, Point_3 corner, double step, string wdir);
-bool generate_ceiling(vector<Plane_3>& ceilings, cv::Mat& hcmap, cv::Mat& ncmap, vector<Line_2>& intersectc, const cm::Config& config, Point_3 corner, double step, string wdir);
-bool generate_map(string wdir, double size);
-bool generate_modeling(string wdir);
+/*!
+ * \description: Detect floor planes from floor pointcloud by RANSAC.
+ * \param points floor pointcloud
+ * \param floors detected floor planes
+ * \param intersects intersection between floors
+ * \param config configuration file
+ * \param wdir file save/load directory
+ * \return 
+ */
+bool ransac_detection_floor(Pwn_vector& points, vector<Plane_3>& floors, vector<Line_2>& intersects, const cm::Config& config, string wdir);
 
 /*!
- * \description: Approximate segment to segment squared distance.
- * \param {s1} first segment source point 
- * \param {t1} first segment target point
- * \param {s2} second segment source point
- * \param {t2} second segment target point
- * \return {*} squared distance
+ * \description: Detect ceiling planes from ceiling pointcloud by RANSAC.
+ * \param points ceiling pointcloud
+ * \param floors detected ceiling planes
+ * \param intersects intersection between ceilings
+ * \param config configuration file
+ * \param wdir file save/load directory
+ * \return 
  */
-inline double robust_squared_distance(const Point_2 &s1, const Point_2 &t1, const Point_2 &s2, const Point_2 &t2) {
-  return segment_segment_squared_distance(
-    s1.x(), s1.y(), t1.x(), t1.y(),
-    s2.x(), s2.y(), t2.x(), t2.y());
-}
+bool ransac_detection_ceiling(Pwn_vector& points,  vector<Plane_3>& ceilings, vector<Line_2>& intersects, const cm::Config& config, string wdir);
+
+
+/******************************hypothesis_generator.cpp.cpp******************************/
+/*!
+ * \description: Refine lines and generate segment hypothesis.
+ * \param lines detected facade projection lines
+ * \param bsegments 2D bbox segments
+ * \param segments segment hypothesis
+ * \param points_idx record point index in pointcloud
+ * \param points segment intersection
+ * \param angle_thred regulization angle threshold
+ * \param num_threshold regulization point number threshold
+ * \param extend_length segment extension ratio
+ * \param wdir file save/load directory
+ * \return 
+ */
+bool generation(vector<Line>& lines, vector<Segment>& bsegments, vector<Segment>& segments, unordered_map<Point_2, int>& points_idx, vector<IntersectPoint>& points, float angle_thred, float num_threshold, float extend_length, string wdir);
+
+
+/******************************segment_selection.cpp******************************/
+/*!
+ * \description: Select optimal subset from segment hypothesis to generate floorplan via 0-1 integer linear programming with constraints.
+ * \param selected selected segments (floorplan)
+ * \param points_idx record point index in pointcloud
+ * \param heights the highest and lowest segment heights
+ * \param oritations segment normals
+ * \param lines detected facade projection lines
+ * \param segments segment hypothesis
+ * \param points segment supporting points
+ * \param bsegments 2D bbox segments
+ * \param lambda_data_fitting weight of point supporting
+ * \param lambda_model_coverage weight of point coverage
+ * \param lambda_model_complexity weight of model complexity
+ * \param alpha parameter for point coverage 
+ * \param wdir file save/load directory
+ * \return
+ */
+void optimize(vector<Segment_2>& selected, unordered_map<Point_2, int>& points_idx, vector<Point_2>& heights, vector<Vector_2>& oritations, vector<Line>& lines, vector<Segment>& segments, vector<IntersectPoint>& points, vector<Segment>& bsegments, double lambda_data_fitting, double lambda_model_coverage, double lambda_model_complexity, double alpha, string wdir);
+       
+/*!
+ * \description: Select optimal subset from potential facades to generate facades via 0-1 integer linear programming with constraints.
+ * \param potential_facade potential facades
+ * \param points intersection of potential facades
+ * \param suppoints_num the number of supporting points for each potential facade
+ * \param area_ratio point coverage ratio for each potential facade
+ * \param lambda_data_fitting weight of point supporting
+ * \param lambda_model_coverage weight of point coverage
+ * \param lambda_model_complexity weight of model complexity
+ * \param wdir file save/load directory
+ * \return
+ */
+void optimize2(vector<Facade>& potential_facade, vector<IntersectPoint>& points, vector<int>& suppoints_num, vector<double>& area_ratio, double lambda_data_fitting, double lambda_model_coverage, double lambda_model_complexity, string wdir);
+
+/*!
+ * \description: Recover mesh from selected segments according to heights.
+ * \param selected selected segments
+ * \param planes recovered mesh
+ * \param heights segment heights
+ * \param oritations segment normals
+ * \param top highest segment height
+ * \param bottom lowest segment height
+ * \return
+ */
+void producemesh(vector<Segment_2>& selected, Mesh<K_epec::Point_3>& planes, vector<Point_2>& heights, vector<Vector_2>& oritations, double top = 0, double bottom = 1);
+
+/*!
+ * \description: Identify door from floorplan.
+ * \param selected floorplan
+ * \param config configuration file
+ * \param wdir file save/load directory
+ * \return
+ */
+bool segment_wall(vector<Segment_2> selected, const cm::Config& config, string wdir);
+
+
+/******************************kdtree_search.cpp******************************/
+/*!
+ * \description: Compute the density of pointcloud.
+ * \param k k nearest neighbour
+ * \param pointsets pointcloud
+ * \return {*}
+ */
+float density(int k, vector<Point_3>& pointsets);
+
+
+/******************************generate_fc_map.cpp******************************/
+/*!
+ * \description: Generate ceiling, floor and facade models.
+ * \param segments floorplan
+ * \param corner corner point (xmin, ymax, zmin) of facade pointcloud
+ * \param length lengths of 2D bbox (ignore z axis)
+ * \param config configuration file
+ * \param wdir file save/load directory
+ * \return
+ */
+bool generate_fcf(vector<Segment_2>& segments, const Point_3 corner, const Point_2 length, const cm::Config& config, string wdir);
+
+/*!
+ * \description: Generate horizontal ceiling and floor from two-manifold floorplan.
+ * \param segments two-manifold floorplan
+ * \param top ceiling height
+ * \param bottom floor height
+ * \param wdir file save/load directory
+ * \return
+ */
+bool generate_fc(vector<Segment_2> segments, double top, double bottom, string wdir);
+
+/*!
+ * \description: Detect floor/ceiling planes from floor pointcloud, compute their intersection, and compute height/density map of pointcloud.
+ * \param planes detected planes
+ * \param hmap height map of pointcloud
+ * \param nmap density map of pointcloud
+ * \param intersect intersection of planes
+ * \param config configuration file
+ * \param corner corner point (xmin, ymax, zmin) of facade pointcloud
+ * \param step sampling step
+ * \param wdir file save/load directory
+ * \param tag floor (tag == 1), ceiling (tag == 0)
+ * \return 
+ */
+bool ready_for_fc(vector<Plane_3>& planes, cv::Mat& hmap, cv::Mat& nmap, vector<Line_2>& intersect, const cm::Config& config, Point_3 corner, double step, string wdir, int tag);
+
+/*!
+ * \description: Generate freespace image from floor and cylinder models.
+ * \param wdir file save/load directory
+ * \param size sampling step
+ * \return
+ */
+bool generate_map(string wdir, double size);
+
+/*!
+ * \description: Merge ceiling, floor, facade and cylinder models with .off format.
+ * \param wdir file save/load directory
+ * \return
+ */
+bool generate_off_modeling(string wdir);
+
+/*!
+ * \description: Merge ceiling, floor, facade and cylinder models with .ply format.
+ * \param wdir file save/load directory
+ * \return
+ */
+bool generate_ply_modeling(string wdir);
 
 #endif // _BASE_H_
 

@@ -1,11 +1,11 @@
-#ifndef APPROXIMATE_SQUARED_DISTANCE_H
-#define APPROXIMATE_SQUARED_DISTANCE_H
+#ifndef _APPROXIMATE_SQUARED_DISTANCE_H_
+#define _APPROXIMATE_SQUARED_DISTANCE_H_
 
 // minimum segment squared length
 #define EPSILON_MINIMUM_SQUARED_LENGTH 1.0e-8
 
 /*!
- * \brief Approximate point to point squared distance.
+ * \description: Approximate point to point squared distance.
  * \note Possible underflow and overflow of float number type.
  * \param p1x first point x
  * \param p1y first point y
@@ -23,7 +23,7 @@ inline double point_point_squared_distance(
 }
 
 /*!
- * \brief Approximate point to segment squared distance.
+ * \description: Approximate point to segment squared distance.
  * \note Possible underflow and overflow of float number type.
  * \param px point x
  * \param py point y
@@ -65,7 +65,7 @@ inline double point_segment_squared_distance(
 }
 
 /*!
- * \brief Approximate segment to segment squared distance.
+ * \description: Approximate segment to segment squared distance.
  * \note Possible underflow and overflow of float number type.
  * \param p1x first segment source point x
  * \param p1y first segment source point y
@@ -130,4 +130,4 @@ inline double segment_segment_squared_distance(
 
 #undef EPSILON_MINIMUM_SQUARED_LENGTH
 
-#endif // APPROXIMATE_SQUARED_DISTANCE_H
+#endif // _APPROXIMATE_SQUARED_DISTANCE_H_
