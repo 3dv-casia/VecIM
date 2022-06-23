@@ -5,11 +5,7 @@ cell assembly problems defined as global optimizations while reducing the recons
 
     Jiali Han, Mengqi Rong, Hanqing Jiang, Hongmin Liu, Shuhan Shen,
     Vectorized indoor surface reconstruction from 3D point cloud with multistep 2D optimization,
-    ISPRS Journal of Photogrammetry and Remote Sensing,
-    Volume 177,
-    2021,
-    Pages 57-74,
-    ISSN 0924-2716,
+    ISPRS Journal of Photogrammetry and Remote Sensing,2021.
 
 ![image](https://github.com/ShuhanShen/VecIM/blob/main/images/pipeline.PNG)
 
