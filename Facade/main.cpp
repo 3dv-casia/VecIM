@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
     }
 
     // working directory
-    const std::string wdir(argv[1]);   
+    const std::string wdir(string(argv[1]) + "/");   
     google::InitGoogleLogging("");
     google::SetLogDestination(google::GLOG_INFO, (wdir + "logtestInfo").c_str()); 
     google::SetStderrLogging(google::GLOG_INFO);

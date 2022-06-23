@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<file>
+  <facadename>facade.ply</facadename>
+  <floorname>floor.ply</floorname>
+  <ceilingname>ceiling.ply</ceilingname>
+  <cylindername>cylinder.ply</cylindername>
+</file>
+<fheight>
+  <enabled>false</enabled>
+  <top>153.407</top>
+  <bottom>150.597</bottom>
+</fheight>
+<facade>
+  <enabled>true</enabled>
+  <ransac>
+    <min_points>1000</min_points>
+    <epsilon>0.02</epsilon>
+    <normal_threshold>0.90</normal_threshold>
+    <cluster_epsilon>0.50</cluster_epsilon>
+    <probability>0.001</probability>
+    <cos_angle>0.08</cos_angle>
+    <angle>15.0</angle>
+  </ransac>
+  <regularize>
+    <extend_ratio>2.0</extend_ratio>
+    <angle_thred>10.0</angle_thred>
+    <num_thred>10.0</num_thred>
+  </regularize>
+  <segment>
+    <lamda_data_fitting>0.50</lamda_data_fitting>
+    <lamda_model_coverage>0.20</lamda_model_coverage>
+    <lamda_model_complxity>0.30</lamda_model_complxity>
+    <alpha>15.0</alpha>
+  </segment>
+  <height>
+    <lamda_data_fitting>0.40</lamda_data_fitting>
+    <lamda_model_coverage>0.40</lamda_model_coverage>
+    <lamda_model_complexity>0.20</lamda_model_complexity>
+  </height>
+  <ratio>0.40</ratio>
+  <density>0.01</density>
+  <ceiling_detection>false</ceiling_detection>
+</facade>
+<ceiling_floor>true</ceiling_floor>
+<ceiling>
+  <enabled>true</enabled>
+  <ransac>
+    <min_points>10000</min_points>
+    <epsilon>0.05</epsilon>
+    <normal_threshold>0.90</normal_threshold>
+    <cluster_epsilon>1.0</cluster_epsilon>
+    <probability>0.001</probability>
+    <cos_angle>0.996</cos_angle>
+  </ransac>
+  <regularize>
+    <dis_thred>0.15</dis_thred>
+  </regularize>
+</ceiling>
+<floor>
+  <enabled>true</enabled>
+  <ransac>
+    <min_points>100000</min_points>
+    <epsilon>0.05</epsilon>
+    <normal_threshold>0.90</normal_threshold>
+    <cluster_epsilon>1.0</cluster_epsilon>
+    <probability>0.001</probability>
+    <cos_angle>0.996</cos_angle>
+  </ransac>
+  <ransac2>
+    <min_points>30000</min_points>
+    <epsilon>0.05</epsilon>
+    <normal_threshold>0.90</normal_threshold>
+    <cluster_epsilon>1.0</cluster_epsilon>
+    <probability>0.001</probability>
+    <cos_angle>0.996</cos_angle>
+  </ransac2>
+  <regularize>
+    <dis_thred>0.5</dis_thred>
+  </regularize>
+</floor>
+<arr>
+  <step>0.05</step>
+  <extend>0.1</extend>
+  <mrf>
+    <use_swap>true</use_swap>
+    <balance>0.2</balance>
+    <iterations>40</iterations>
+  </mrf>
+</arr>
+<cylinder>
+  <enabled>true</enabled>
+  <ransac>
+    <min_points>50000</min_points>
+    <epsilon>0.05</epsilon>
+    <normal_threshold>0.90</normal_threshold>
+    <cluster_epsilon>1.0</cluster_epsilon>
+    <probability>0.001</probability>
+    <cos_angle>0.08</cos_angle>
+  </ransac>
+  <regularize>
+    <cylinder_r>0.65</cylinder_r>
+  </regularize>
+</cylinder>
+<merge>true</merge>
