@@ -235,7 +235,7 @@ bool Toplane(vector<Circle>& circles, string wdir)
             ofss << setiosflags(ios::fixed) << setprecision(8) << vertexes[j].x() << " " << vertexes[(j+1)%(8*(i+1))].x() << " " << vertexes[j].y() << " " << vertexes[(j+1)%(8*(i+1))].y() << "\n";
         ofss << setiosflags(ios::fixed) << setprecision(8) << vertexes[8*i + 7].x() << " " << vertexes[8*i + 0].x() << " " << vertexes[8*i + 7].y() << " " << vertexes[8*i + 0].y() << "\n";
     }
-    LOG(INFO) << num << " cylinders remained."; 
+    LOG(INFO) << num << " cylinders are remained."; 
     ofss.close();
 
     // generate height according to floor.off ceiling.off
