@@ -185,7 +185,8 @@ void optimize(vector<Segment_2>& selected, unordered_map<Point_2, int>& points_i
 		c2->add_coefficient(num_segments+i, 4.0);
 		c2->set_bound(LinearConstraint::LOWER, 0.0);
 	}
-	/*
+
+/*
 	// boundary point must be either 1 or 0, non-boundary point must be either 2 or 0
 	for(int i = 0; i < points.size(); i++)
 	{
@@ -219,8 +220,10 @@ void optimize(vector<Segment_2>& selected, unordered_map<Point_2, int>& points_i
 			return;
 		}
 		c1->add_coefficient(num_segments+i, -2.0);
+		
 	}
-	*/
+*/
+
 
 	// 2.Add constraints: for the sharp points. 
 	double M = 1.0;
@@ -405,14 +408,6 @@ void optimize2(vector<Facade>& potential_facades, vector<IntersectPoint>& points
 	LOG(INFO) << "coeff_data_fitting: " << lambda_data_fitting;
 	LOG(INFO) << "coeff_coverage: " << coeff_coverage;
 	LOG(INFO) << "coeff_complexity: " << coeff_complexity;
-
-	//test
-    ifstream file(wdir + "energy");
-	E2I to;
-	for(int i = 0; i < suppoints_num.size(); i++){
-		LOG(INFO) << potential_facades[i].seg << " " << suppoints_num[i] << " " << -coeff_data_fitting * suppoints_num[i] << " " << area_ratio[i] << " " << coeff_coverage * area_ratio[i] << "\n";
-	}
-	file.close();
 
 	// linear
 	program_.clear();

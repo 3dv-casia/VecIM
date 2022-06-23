@@ -51,7 +51,7 @@ class building
         Facade_data(vector<vector<Point_3>> poly):polygons(poly){}
         int index; // segment(line) index
         K_epec::Segment_2 seg;
-        vector<Point_2> bottoms; // {small, big}
+        vector<Point_2> bottoms; // height: {source, target}
         vector<Point_2> ups;
         vector<vector<Point_3>> polygons;
         Vector_2 normal;

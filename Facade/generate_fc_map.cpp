@@ -332,7 +332,7 @@ bool generate_map(string wdir, double size)
     }
     for(int i = 0; i < nf; i++){
        int nfp; 
-       int s,t,ss;
+       int s, t, ss;
        ifs >> nfp;
        ifs >> s;
        ss = s;
@@ -405,7 +405,6 @@ bool generate_off_modeling(string wdir)
     string fname[4] = {"ceiling.off", "floor.off", "facade.off", "cylinder.off"};
     for(int k = 0; k < sizeof(fname)/sizeof(fname[0]); k++){
         ifstream ifs(wdir + fname[k]);
-        if(!ifs) continue;
         ifs >> str;
         ifs >> np >> nf >> n;
         int *order = new int[np];
@@ -413,9 +412,8 @@ bool generate_off_modeling(string wdir)
             ifs >> x >> y >> z;
             it = find(points.begin(), points.end(), Point_3(x, y, z));
             if(it == points.end()){
-            points.push_back(Point_3(x, y, z));
-            order[i] = num_p;
-            num_p++;
+                points.push_back(Point_3(x, y, z));
+                order[i] = num_p++;
             }
             else
                 order[i] = it - points.begin();      
@@ -425,7 +423,7 @@ bool generate_off_modeling(string wdir)
             ifs >> n;
             int index;
             vector<int> poly;
-            for(int i = 0; i < n ; i++){
+            for(int i = 0; i < n; i++){
                 ifs >> index;
                 poly.push_back(order[index]);
             }   

@@ -245,7 +245,7 @@ bool OFFMeshSave(const string fileName, Mesh<K_epec::Point_3>& mesh){
      for (const auto &p : mesh.vertices)
        ofs << setiosflags(ios::fixed) << setprecision(8) << p.x() << ' ' << p.y() << ' ' << p.z() << '\n';
      for(auto poly: mesh.faces)
-        ofs << 3 << " " << poly[0] << " " << poly[1] << " " << poly[2] << "\n";
+        ofs << 3 << " " << static_cast<int>(CGAL::to_double(poly[0])) << " " << static_cast<int>(CGAL::to_double(poly[1])) << " " << static_cast<int>(CGAL::to_double(poly[2])) << "\n";
      ofs.close();
 }
 

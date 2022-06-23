@@ -335,10 +335,10 @@ void building::facade_segment_recognization()
             if(m_facade_segs[i].has_on(vs->point()) && m_facade_segs[i].has_on(vt->point()))
             {
                 // the edge is on the facade, exact computation
-                if(vs->point() < vt->point())
-                  m_facade.push_back(Facade_data(i, K_epec::Segment_2(vs->point(), vt->point())));
-                else
-                  m_facade.push_back(Facade_data(i, K_epec::Segment_2(vt->point(), vs->point())));
+                //if(vs->point() < vt->point())
+                m_facade.push_back(Facade_data(i, K_epec::Segment_2(vs->point(), vt->point())));
+                //else
+                //  m_facade.push_back(Facade_data(i, K_epec::Segment_2(vt->point(), vs->point())));
                 flag = 1;
                 facade_tags.push_back(1);
                 break;
@@ -836,6 +836,7 @@ bool building::segment_arrangement_extrusion(std::vector<Plane_3>& m_planes, int
                 if(l1 > 0 && l1 < m_planes.size() && l1 == l2)
                   m_facade[idx].tag = 1;
             }
+
         }
     }
     return true;
