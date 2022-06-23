@@ -18,3 +18,14 @@
   ./Facade    xxx/xxx/xxx/
   可执行文件  数据目录（目录下存放所有的输入输出数据）
   数据目录下需要有配置文件"config_modeling.xml"，文件内控制程序的执行流程和参数。
+
+
+overview
+
+Dependencies
+
+build
+
+run
+
+
