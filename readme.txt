@@ -1,5 +1,5 @@
 1.依赖库：
-  CGAL 4.11
+  CGAL 4.11+
   opencv
   gmp
   glog
@@ -10,7 +10,7 @@
 
 3.程序编译
   cd build
-  cmake ..
+  cmake  -DCMAKE_BUILD_TYPE=Release ..
   cd Facade
   make
   
