@@ -28,12 +28,13 @@ The project is built on CMake, and there is more than one way to compile it. The
     $ make
 
 ### Run
-For a certain scene, the permanent structures including facade, floor, ceiling and cylinder (if any) are first segmented from the whole point cloud in the pre-processing. **VecIM** takes the point cloud of different components as the input and outputs LoD2 indoor vectorized model.
+For a certain scene, the permanent structures including facade, floor, ceiling and cylinder (if any) are first segmented from the whole point cloud in the pre-processing. **VecIM** takes the point cloud of different components as the input and outputs a LoD2 indoor vectorized model.
 
-Put different semantic point cloud (**facade.ply, floor.ply, ceiling.ply, cylinder.ply**) and parameter configuration file (**config_modeling.xml**) in the same folder with the path P, and then run the program:
+Put different semantic point cloud (**facade.ply, floor.ply, ceiling.ply, cylinder.ply**) and parameter configuration file in the same folder with the path PATH, and then run:
 
-    ./Facade/Facade -P
+    ./Facade/Facade PATH
 
+An example of parameter configuration file is provided named as **config_modeling.xml**.
 
 ## License
 This work is licensed under the [GNU General Public License v3.0](https://github.com/ShuhanShen/VecIM/blob/main/LICENSE).

@@ -7,9 +7,7 @@ project( Facade )
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 ### Configuration
-#debug下开启-g选项
 SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb") 
-#release则使用该配置
 SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(FACADE_ROOT         ${CMAKE_CURRENT_LIST_DIR})
